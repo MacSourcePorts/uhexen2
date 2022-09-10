@@ -344,50 +344,66 @@ CPPFLAGS+= -DSDLQUAKE
 # not relying on sdl-config command and assuming
 # /Library/Frameworks/SDL.framework is available
 SDL_CFLAGS =-D_GNU_SOURCE=1 -D_THREAD_SAFE
-SDL_CFLAGS+=-DSDL_FRAMEWORK -DNO_SDL_CONFIG
+# SDL_CFLAGS+=-DSDL_FRAMEWORK -DNO_SDL_CONFIG
 SDL_LIBS   =
 # default to our local SDL[2].framework for build
 SDL_FRAMEWORK_PATH ?=$(OSLIBS)/macosx
 ifneq ($(SDL_FRAMEWORK_PATH),)
-SDL_LIBS  +=-F$(SDL_FRAMEWORK_PATH)
-SDL_CFLAGS+=-F$(SDL_FRAMEWORK_PATH)
+ifeq ($(MACH_TYPE),x86_64)
+SDL_LIBS  +=-L/usr/local/lib -arch x86_64
+SDL_CFLAGS+=-I/usr/local/include/SDL -arch x86_64
 endif
-SDL_LIBS  +=-Wl,-framework,SDL -Wl,-framework,Cocoa
+ifeq ($(MACH_TYPE),arm64)
+SDL_LIBS  +=-L/opt/homebrew/lib -arch arm64
+SDL_CFLAGS+=-I/opt/homebrew/include/SDL -arch arm64
+endif
+endif
+SDL_LIBS  +=-Wl,-lSDL -lSDLMain -Wl,-framework,Cocoa
 CFLAGS  += $(SDL_CFLAGS)
 LDFLAGS += $(SDL_LIBS)
 
 GL_LINK=-Wl,-framework,OpenGL
 
 ifeq ($(USE_CODEC_FLAC),yes)
-CODEC_INC = -I$(OSLIBS)/macosx/codecs/include
-CODEC_LINK= -L$(OSLIBS)/macosx/codecs/lib
+CODEC_INC = -I/opt/homebrew/include
+CODEC_LINK= -L/opt/homebrew/lib
 endif
 ifeq ($(USE_CODEC_VORBIS),yes)
-CODEC_INC = -I$(OSLIBS)/macosx/codecs/include
-CODEC_LINK= -L$(OSLIBS)/macosx/codecs/lib
+CODEC_INC = -I/opt/homebrew/include
+CODEC_LINK= -L/opt/homebrew/lib
 endif
 ifeq ($(USE_CODEC_MP3),yes)
-CODEC_INC = -I$(OSLIBS)/macosx/codecs/include
-CODEC_LINK= -L$(OSLIBS)/macosx/codecs/lib
+CODEC_INC = -I/opt/homebrew/include
+CODEC_LINK= -L/opt/homebrew/lib
 endif
 ifeq ($(USE_CODEC_OPUS),yes)
-CODEC_INC = -I$(OSLIBS)/macosx/codecs/include
-CODEC_LINK= -L$(OSLIBS)/macosx/codecs/lib
+CODEC_INC = -I/opt/homebrew/include/opus
+CODEC_LINK= -L/opt/homebrew/lib
 endif
 ifeq ($(USE_CODEC_MIKMOD),yes)
-CODEC_INC = -I$(OSLIBS)/macosx/codecs/include
-CODEC_LINK= -L$(OSLIBS)/macosx/codecs/lib
+CODEC_INC = -I/opt/homebrew/include
+CODEC_LINK= -L/opt/homebrew/lib
 endif
 ifeq ($(USE_CODEC_XMP),yes)
-CODEC_INC = -I$(OSLIBS)/macosx/codecs/include
-CODEC_LINK= -L$(OSLIBS)/macosx/codecs/lib
+CODEC_INC = -I/opt/homebrew/include
+CODEC_LINK= -L/opt/homebrew/lib
 endif
 ifeq ($(USE_CODEC_MODPLUG),yes)
-CODEC_INC = -I$(OSLIBS)/macosx/codecs/include
-CODEC_LINK= -L$(OSLIBS)/macosx/codecs/lib
+CODEC_INC = -I/opt/homebrew/include
+CODEC_LINK= -L/opt/homebrew/lib
 endif
-INCLUDES += $(CODEC_INC)
-LDFLAGS += $(CODEC_LINK)
+
+ifeq ($(MACH_TYPE),x86_64)
+INCLUDES += -I/usr/local/include -I/usr/local/include/opus
+LDFLAGS += -L/usr/local/lib
+endif
+
+ifeq ($(MACH_TYPE),arm64)
+INCLUDES += -I/opt/homebrew/include -I/opt/homebrew/include/opus
+LDFLAGS += -L/opt/homebrew/lib
+endif
+
+
 
 endif
 # End of Mac OS X settings
